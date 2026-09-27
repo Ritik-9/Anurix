@@ -30,7 +30,7 @@ const Main = () => {
             <div className="grid grid-cols-4 gap-4">
                 {song.map((item, index) => (
                 <div key={index} className="bg-[#161922] p-4 rounded-xl flex flex-col gap-3 group hover:bg-[#1c202d] transition-all cursor-pointer border border-gray-800/40">
-                    <div className="w-full h-36 bg-linear-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden relative flex items-center justify-center">
+                    <div className="w-full h-36 bg-linear-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden  flex items-center justify-center">
                     <span className="text-2xl group-hover:scale-110 transition-transform duration-300">🎵</span>
                     </div>
                     <div>

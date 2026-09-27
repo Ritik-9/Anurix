@@ -13,7 +13,7 @@ const Sidebar = () => {
             <rect x="12" y="9" width="3" height="6" rx="1.5" fill="currentColor"/>
             <rect x="17" y="5" width="3" height="14" rx="1.5" fill="currentColor"/>
             </svg>
-            <span>AURA</span>
+            <span>Anurix</span>
         </div>
         <button className='flex items-center gap-4 px-4 py-3 rounded-xl text-white hover:bg-[#1a1d29] font-medium transition-colors'><span><House size={20} /></span>Home</button>
         <button className='flex items-center gap-4 px-4 py-3 rounded-xl hover:text-white hover:bg-[#1a1d29]/50 transition-colors'><span><Search size={20} /></span>Search</button>
