@@ -10,6 +10,8 @@ export const MusicProvider = ({ children }) => {
     cover: "🎵"
   })
 
+  const [currentView, setCurrentView] = useState('home')
+
   const togglePlay = () => {
     setIsPlaying(prev => !prev)
   }
@@ -20,7 +22,7 @@ export const MusicProvider = ({ children }) => {
   }
 
   return (
-    <MusicContext.Provider value={{ isPlaying, currentTrack, togglePlay, playTrack }}>
+    <MusicContext.Provider value={{ isPlaying, currentTrack, togglePlay, playTrack, currentView, setCurrentView }}>
       {children}
     </MusicContext.Provider>
   )
