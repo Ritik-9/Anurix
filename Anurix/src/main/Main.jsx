@@ -1,4 +1,5 @@
 import React from 'react'
+import { useState,useEffect } from 'react'
 import { useMusic } from '../context/MusicContext'
 
 
@@ -6,12 +7,21 @@ const Main = () => {
 
     const {playTrack}=useMusic()
 
-    const song=[
-      { title: "Midnight Drive", artist: "Synthwave Collective",cover: "🎵" },
-      { title: "Focus Flow", artist: "Ambient Soundscapes",cover: "🎹" },
-      { title: "Neon Bloom", artist: "Cyber Pulse",cover: "🌆" },
-      { title: "Starlight Echo", artist: "Luna Phase",cover: "✨" }
-    ]
+    const [song,setSongs]=useState([])
+    const [loading,setLoading]=useState(true)
+
+    useEffect(() => {
+        fetch('http://localhost:3000/api/music')
+            .then(res => res.json())
+            .then(data => {
+                setSongs(data)
+                setLoading(false)
+            })
+            .catch(err => {
+                console.error("Failed to fetch songs:", err)
+                setLoading(false)
+            })
+    }, [])
   return (
     <div className="bg-[#12141c] rounded-2xl p-6 overflow-y-auto">
         <div className="relative w-full h-70 rounded-2xl overflow-hidden p-8 flex flex-col justify-end bg-linear-to-r from-[#1a2332] to-[#0f141f] border border-gray-800/50 shadow-2xl">
@@ -21,7 +31,9 @@ const Main = () => {
                     <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-white">Midnight Drive</h1>
                     <p className="text-sm text-gray-400 font-medium">SYNTHWAVE COLLECTIVE • 12 Songs</p>
                     <div>
-                        <button className="mt-3 bg-[#00f2fe] text-black font-bold px-7 py-3 rounded-xl flex items-center gap-2 hover:bg-[#35f5ff] transition-all shadow-[0_0_25px_rgba(0,242,254,0.3)] cursor-pointer">
+                        <button onClick={() => {
+                                if (song.length > 0) playTrack(song[0])
+                            }} className="mt-3 bg-[#00f2fe] text-black font-bold px-7 py-3 rounded-xl flex items-center gap-2 hover:bg-[#35f5ff] transition-all shadow-[0_0_25px_rgba(0,242,254,0.3)] cursor-pointer">
                             ▶ Play Now
                         </button>
                     </div>
@@ -32,13 +44,17 @@ const Main = () => {
                 <h2 className="text-xl font-bold tracking-tight text-white">Recently Played</h2>
                 <span className="text-xs text-gray-400 hover:text-white cursor-pointer transition-colors">See all</span>
             </div>
+
+            {loading ? (
+                <div className="text-gray-400 text-sm py-4">Loading tracks from database...</div>
+            ) :(
             <div className="grid grid-cols-4 gap-4">
                 {song.map((item, index) => (
                 <div key={index} onClick={()=>{
                     playTrack(item)
                 }} className="bg-[#161922] p-4 rounded-xl flex flex-col gap-3 group hover:bg-[#1c202d] transition-all cursor-pointer border border-gray-800/40">
                     <div className="w-full h-36 bg-linear-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden  flex items-center justify-center">
-                    <span className="text-2xl group-hover:scale-110 transition-transform duration-300">🎵</span>
+                    <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{item.cover}</span>
                     </div>
                     <div>
                     <h3 className="text-sm font-semibold text-white truncate">{item.title}</h3>
@@ -47,6 +63,7 @@ const Main = () => {
                 </div>
                 ))}
             </div>
+            )}
         </div>
     </div>
   )

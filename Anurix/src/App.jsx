@@ -3,8 +3,9 @@ import Sidebar from './HomePage/Sidebar'
 import Main from './main/main'
 import Footer from './footer/footer'
 import { useMusic } from './context/MusicContext'
+import Search from './HomePage/Search'
 
-const SearchView = () => <div className="text-2xl font-bold p-6">🔍 Search View (Coming Soon)</div>
+const SearchView = () => <div className="text-2xl font-bold p-6"><Search /></div>
 const ExploreView = () => <div className="text-2xl font-bold p-6">🚀 Explore View (Coming Soon)</div>
 const LibraryView = () => <div className="text-2xl font-bold p-6">📚 Your Library View (Coming Soon)</div>
 
