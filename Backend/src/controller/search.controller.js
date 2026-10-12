@@ -16,7 +16,7 @@ const searchTracks = async (req, res) => {
 
     try {
      
-      const response = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=5`
+      const response = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=20`
       const apiRes = await fetch(response)
       const data = await apiRes.json()
 

@@ -11,6 +11,17 @@ export const MusicProvider = ({ children }) => {
     audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
   })
   
+  // User Auth States initialized from localStorage
+  const [user, setUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('anurix_user')
+      return savedUser ? JSON.parse(savedUser) : null
+    } catch {
+      return null
+    }
+  })
+  const [token, setToken] = useState(() => localStorage.getItem('anurix_token') || null)
+
   const [queue, setQueue] = useState([
     {
       title: "Midnight Drive",
@@ -34,7 +45,30 @@ export const MusicProvider = ({ children }) => {
 
   const audioRef = useRef(new Audio())
 
-  // Audio event listeners for time progression and auto-advance
+  // Auth Methods
+  const loginUser = (userData, userToken) => {
+    setUser(userData)
+    setToken(userToken)
+    localStorage.setItem('anurix_user', JSON.stringify(userData))
+    localStorage.setItem('anurix_token', userToken)
+  }
+
+  const logoutUser = async () => {
+    try {
+      await fetch('http://localhost:3000/api/auth/logout', { 
+        method: 'POST', 
+        credentials: 'include' 
+      })
+    } catch (err) {
+      console.error("Logout error:", err)
+    }
+    setUser(null)
+    setToken(null)
+    localStorage.removeItem('anurix_user')
+    localStorage.removeItem('anurix_token')
+  }
+
+  // Audio Event Listeners
   useEffect(() => {
     const audio = audioRef.current
 
@@ -53,7 +87,7 @@ export const MusicProvider = ({ children }) => {
     }
   }, [queue, currentIndex])
 
-  // Handle source updates
+  // Track & Playback Handlers
   useEffect(() => {
     if (currentTrack && currentTrack.audioUrl && currentTrack.audioUrl !== "#") {
       audioRef.current.src = currentTrack.audioUrl
@@ -63,7 +97,6 @@ export const MusicProvider = ({ children }) => {
     }
   }, [currentTrack])
 
-  // Handle play/pause toggle
   useEffect(() => {
     if (isPlaying) {
       audioRef.current.play().catch(err => console.error("Playback error:", err))
@@ -75,20 +108,17 @@ export const MusicProvider = ({ children }) => {
   const togglePlay = () => setIsPlaying(prev => !prev)
 
   const playTrack = (track) => {
-    // Check if the track already exists in the queue
     let existingIndex = queue.findIndex(t => 
       (t._id && t._id === track._id) || (t.audioUrl && t.audioUrl === track.audioUrl)
     )
 
     if (existingIndex === -1) {
-      // If it's a new track, append it to the queue and jump to it
       const updatedQueue = [...queue, track]
       setQueue(updatedQueue)
       const newIdx = updatedQueue.length - 1
       setCurrentIndex(newIdx)
       setCurrentTrack(updatedQueue[newIdx])
     } else {
-      // If it's already in the queue, just switch to its index
       setCurrentIndex(existingIndex)
       setCurrentTrack(queue[existingIndex])
     }
@@ -140,7 +170,12 @@ export const MusicProvider = ({ children }) => {
       seekAudio,
       changeVolume,
       currentView,
-      setCurrentView
+      setCurrentView,
+      // Auth values exported globally
+      user,
+      token,
+      loginUser,
+      logoutUser
     }}>
       {children}
     </MusicContext.Provider>

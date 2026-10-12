@@ -1,11 +1,10 @@
 const Music = require('../model/music.model')
 
-// Handle artist/user track & album uploads
+
 const handleUpload = async (req, res) => {
   try {
     const { title, artist, cover, duration, audioUrl } = req.body
 
-    // Basic validation
     if (!title || !artist || !audioUrl) {
       return res.status(400).json({ message: "Please provide title, artist, and a valid audio URL." })
     }
