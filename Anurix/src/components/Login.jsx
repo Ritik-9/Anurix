@@ -3,7 +3,7 @@ import { useMusic } from '../context/MusicContext'
 
 const Login = ({ switchToSignup }) => {
     const { loginUser, setCurrentView } = useMusic()
-    const [identifier, setIdentifier] = useState('') // email or username
+    const [identifier, setIdentifier] = useState('') 
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
@@ -14,7 +14,7 @@ const Login = ({ switchToSignup }) => {
         setLoading(true)
 
         try {
-            // Check if input is email or username
+            
             const isEmail = identifier.includes('@')
             const payload = {
                 password,
@@ -24,7 +24,7 @@ const Login = ({ switchToSignup }) => {
             const response = await fetch('http://localhost:3000/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include', // Important for cookies
+                credentials: 'include', 
                 body: JSON.stringify(payload)
             })
 
@@ -34,7 +34,6 @@ const Login = ({ switchToSignup }) => {
                 throw new Error(data.message || 'Failed to log in')
             }
 
-            // Save user data in context/localStorage
             loginUser(data.user, data.token)
             setCurrentView('home')
         } catch (err) {

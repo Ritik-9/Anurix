@@ -10,8 +10,7 @@ export const MusicProvider = ({ children }) => {
     cover: "🎵",
     audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
   })
-  
-  // User Auth States initialized from localStorage
+
   const [user, setUser] = useState(() => {
     try {
       const savedUser = localStorage.getItem('anurix_user')
@@ -171,7 +170,6 @@ export const MusicProvider = ({ children }) => {
       changeVolume,
       currentView,
       setCurrentView,
-      // Auth values exported globally
       user,
       token,
       loginUser,

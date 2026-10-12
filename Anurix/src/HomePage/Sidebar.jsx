@@ -16,7 +16,6 @@ const Sidebar = () => {
 
   return (
     <div className="h-full flex flex-col justify-between py-2">
-      {/* Upper Navigation Links */}
       <div className="flex flex-col gap-2">
         <div className="text-white font-bold tracking-wider text-xl flex items-center gap-3 px-2 mb-2">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-[#00f2fe]">
@@ -62,7 +61,6 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Bottom User Info & Logout Button */}
       {user && (
         <div className="border-t border-gray-800/60 pt-4 flex flex-col gap-3">
           <div className="flex items-center gap-3 bg-[#161922] p-2.5 rounded-xl border border-gray-800">
