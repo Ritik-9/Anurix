@@ -14,21 +14,23 @@ const seedTracks = async (req, res) => {
     let formattedTracks = []
 
     try {
-      const JAMENDO_API_URL = 'https://api.jamendo.com/v3.0/tracks/?client_id=709fa152&format=json&limit=20&audioformat=mp32'
-      const response = await fetch(JAMENDO_API_URL)
+      const ITUNES_API_URL = 'https://itunes.apple.com/search?term=pop&entity=song&limit=4'
+      const response = await fetch(ITUNES_API_URL)
       const data = await response.json()
 
       if (data.results && data.results.length > 0) {
-        formattedTracks = data.results.map(track => ({
-          title: track.name,
-          artist: track.artist_name,
-          cover: track.image || '🎵',
-          duration: Math.floor(track.duration / 60) + ':' + (track.duration % 60 < 10 ? '0' : '') + (track.duration % 60),
-          audioUrl: track.audio
-        }))
+        formattedTracks = data.results
+          .filter(track => track.previewUrl) 
+          .map(track => ({
+            title: track.trackName,
+            artist: track.artistName,
+            cover: track.artworkUrl100 ? track.artworkUrl100.replace('100x100', '300x300') : '🎵',
+            duration: "3:30", 
+            audioUrl: track.previewUrl
+          }))
       }
     } catch (apiError) {
-      console.log("Jamendo API fetch skipped/blocked, using high-definition fallback tracks.")
+      console.log("iTunes API fetch failed during seeding:", apiError.message)
     }
 
     if (formattedTracks.length === 0) {
@@ -44,7 +46,7 @@ const seedTracks = async (req, res) => {
     const seededTracks = await Music.insertMany(formattedTracks)
     
     res.status(201).json({ 
-      message: `Database successfully seeded with ${seededTracks.length} tracks!`, 
+      message: `Database successfully seeded with ${seededTracks.length} tracks from iTunes!`, 
       seededTracks 
     })
   } catch (error) {

@@ -46,7 +46,7 @@ const Footer = () => {
               className="w-full h-full object-cover"
               onError={(e) => {
                 e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
+                if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
               }}
             />
           ) : null}
@@ -74,7 +74,7 @@ const Footer = () => {
           <button className="hover:text-white transition-colors cursor-pointer text-lg">🔁</button>
         </div>
         
-        <div className="w-full flex items-center gap-3 text-xs text-gray-500">
+        <div className="w-full flex items-center gap-3 text-xs text-gray-500 font-mono">
           <span>{formatTime(currentTime)}</span>
           <div 
             onClick={duration ? handleProgressClick : undefined}
@@ -89,7 +89,6 @@ const Footer = () => {
         </div>
       </div>
 
-      
       <div className="flex items-center justify-end gap-4 w-1/4 text-gray-400">
         <button className="hover:text-white transition-colors cursor-pointer text-lg">🎤</button>
         <button className="hover:text-white transition-colors cursor-pointer text-lg">🔊</button>

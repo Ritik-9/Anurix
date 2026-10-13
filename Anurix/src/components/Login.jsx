@@ -85,7 +85,7 @@ const Login = ({ switchToSignup }) => {
                     <button 
                         type="submit" 
                         disabled={loading}
-                        className="w-full mt-2 bg-gradient-to-r from-[#00f2fe] to-[#4facfe] text-black font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity cursor-pointer shadow-lg shadow-[#00f2fe]/10 disabled:opacity-50"
+                        className="w-full mt-2 bg-linear-to-r from-[#00f2fe] to-[#4facfe] text-black font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity cursor-pointer shadow-lg shadow-[#00f2fe]/10 disabled:opacity-50"
                     >
                         {loading ? 'Signing In...' : 'Sign In'}
                     </button>
