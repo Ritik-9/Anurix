@@ -43,7 +43,7 @@ const App = () => {
   return (
     <div className='h-screen w-screen bg-[#0b0c10] text-white p-3 pb-0 gap-3 overflow-hidden hidden lg:grid grid-cols-[260px_1fr] grid-rows-[1fr_80px] animate-fadeIn'>
       <Sidebar />
-      <main className="bg-[#12141c] rounded-2xl overflow-y-auto">
+      <main className="bg-[#12141c] rounded-2xl overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {currentView === 'home' && <Main />}
         {currentView === 'search' && <SearchView />}
         {currentView === 'explore' && <ExploreView />}

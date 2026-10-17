@@ -65,9 +65,20 @@ export const MusicProvider = ({ children }) => {
   })
   const [token, setToken] = useState(() => localStorage.getItem('anurix_token') || null)
 
-  // Queue & Player States
+
   const [queue, setQueue] = useState(DEFAULT_SONGS)
   const [currentIndex, setCurrentIndex] = useState(0)
+
+  const queueRef = useRef(queue)
+  const currentIndexRef = useRef(currentIndex)
+
+  useEffect(() => {
+    queueRef.current = queue
+  }, [queue])
+
+  useEffect(() => {
+    currentIndexRef.current = currentIndex
+  }, [currentIndex])
 
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -100,8 +111,13 @@ export const MusicProvider = ({ children }) => {
 
   const addToHistory = (track) => {
     setRecentlyPlayed((prev) => {
-      const filtered = prev.filter(t => (t._id && t._id === track._id) || (t.audioUrl && t.audioUrl === track.audioUrl))
-      const updated = [track, ...filtered].slice(0, 8) // Keep top 8 recently played
+      const filtered = prev.filter(t => {
+        const isSameId = t._id && track._id && t._id === track._id
+        const isSameUrl = t.audioUrl && track.audioUrl && t.audioUrl === track.audioUrl
+        return !(isSameId || isSameUrl)
+      })
+      const updated = [track, ...filtered].slice(0, 8) 
+      
       try {
         localStorage.setItem('anurix_history', JSON.stringify(updated))
       } catch (e) {
@@ -111,12 +127,53 @@ export const MusicProvider = ({ children }) => {
     })
   }
 
+  const nextTrack = () => {
+    const currentQueue = queueRef.current
+    if (!currentQueue || currentQueue.length === 0) return
+    const currentIdx = currentIndexRef.current
+    const nextIdx = (currentIdx + 1) % currentQueue.length
+    const nextSong = currentQueue[nextIdx]
+
+    if (nextSong) {
+      setCurrentIndex(nextIdx)
+      currentIndexRef.current = nextIdx 
+      setCurrentTrack(nextSong)
+      addToHistory(nextSong)
+    }
+    setIsPlaying(true)
+  }
+
+  const prevTrack = () => {
+    const currentQueue = queueRef.current
+    if (!currentQueue || currentQueue.length === 0) return
+
+    const currentIdx = currentIndexRef.current
+    const prevIdxCalc = (currentIdx - 1 + currentQueue.length) % currentQueue.length
+    const prevSong = currentQueue[prevIdxCalc]
+
+    if (prevSong) {
+      setCurrentIndex(prevIdxCalc)
+      currentIndexRef.current = prevIdxCalc 
+      setCurrentTrack(prevSong)
+      addToHistory(prevSong)
+    }
+    setIsPlaying(true)
+  }
+  const nextTrackRef = useRef(nextTrack)
+  useEffect(() => {
+    nextTrackRef.current = nextTrack
+  }, [nextTrack])
+
   useEffect(() => {
     const audio = audioRef.current
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime)
     const handleLoadedMetadata = () => setDuration(audio.duration)
-    const handleEnded = () => nextTrack()
+    const handleEnded = () => {
+      if (nextTrackRef.current) {
+        nextTrackRef.current()
+      }
+    }
 
     audio.addEventListener('timeupdate', handleTimeUpdate)
     audio.addEventListener('loadedmetadata', handleLoadedMetadata)
@@ -127,14 +184,13 @@ export const MusicProvider = ({ children }) => {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
       audio.removeEventListener('ended', handleEnded)
     }
-  }, [queue, currentIndex])
+  }, [])
 
-  // Track Handlers
   useEffect(() => {
     if (currentTrack && currentTrack.audioUrl && currentTrack.audioUrl !== "#") {
       audioRef.current.src = currentTrack.audioUrl
       
-      // Save last listened track
+
       localStorage.setItem('anurix_last_track', JSON.stringify(currentTrack))
 
       if (isPlaying) {
@@ -153,48 +209,32 @@ export const MusicProvider = ({ children }) => {
 
   const togglePlay = () => setIsPlaying(prev => !prev)
 
-  const playTrack = (track) => {
+  const playTrack = (track, customQueue = null) => {
     addToHistory(track)
 
-    let existingIndex = queue.findIndex(t => 
-      (t._id && t._id === track._id) || (t.audioUrl && t.audioUrl === track.audioUrl)
-    )
+    setQueue(prevQueue => {
+      const activeQueue = customQueue && customQueue.length > 0 ? customQueue : prevQueue
+      
+      let existingIndex = activeQueue.findIndex(t => 
+        (t._id && t._id === track._id) || (t.audioUrl && t.audioUrl === track.audioUrl)
+      )
 
-    if (existingIndex === -1) {
-      const updatedQueue = [...queue, track]
-      setQueue(updatedQueue)
-      const newIdx = updatedQueue.length - 1
-      setCurrentIndex(newIdx)
-      setCurrentTrack(updatedQueue[newIdx])
-    } else {
-      setCurrentIndex(existingIndex)
-      setCurrentTrack(queue[existingIndex])
-    }
+      let targetIndex = existingIndex
+      let finalQueue = activeQueue
+
+      if (existingIndex === -1) {
+        finalQueue = [...activeQueue, track]
+        targetIndex = finalQueue.length - 1
+      }
+
+      setCurrentIndex(targetIndex)
+      currentIndexRef.current = targetIndex 
+      setCurrentTrack(finalQueue[targetIndex])
+      
+      return finalQueue
+    })
     
-    setIsPlaying(true)
-  }
-
-  const nextTrack = () => {
-    if (queue.length === 0) return
-    setCurrentIndex(prevIdx => {
-      const nextIdx = (prevIdx + 1) % queue.length
-      const nextSong = queue[nextIdx]
-      setCurrentTrack(nextSong)
-      addToHistory(nextSong)
-      return nextIdx
-    })
-    setIsPlaying(true)
-  }
-
-  const prevTrack = () => {
-    if (queue.length === 0) return
-    setCurrentIndex(prevIdx => {
-      const prevIdxCalc = (prevIdx - 1 + queue.length) % queue.length
-      const prevSong = queue[prevIdxCalc]
-      setCurrentTrack(prevSong)
-      addToHistory(prevSong)
-      return prevIdxCalc
-    })
+    isPlaying ? null : setIsPlaying(true)
     setIsPlaying(true)
   }
 

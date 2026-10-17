@@ -14,7 +14,7 @@ const seedTracks = async (req, res) => {
     let formattedTracks = []
 
     try {
-      const ITUNES_API_URL = 'https://itunes.apple.com/search?term=pop&entity=song&limit=4'
+      const ITUNES_API_URL = 'https://itunes.apple.com/search?term=pop&entity=song&limit=20'
       const response = await fetch(ITUNES_API_URL)
       const data = await response.json()
 

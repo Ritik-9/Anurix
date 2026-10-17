@@ -62,7 +62,7 @@ const Main = () => {
                                     if (isCurrent) {
                                         togglePlay()
                                     } else {
-                                        playTrack(featuredSong)
+                                        playTrack(featuredSong, songs)
                                     }
                                 }
                             }} 
@@ -81,7 +81,7 @@ const Main = () => {
                         <h2 className="text-xl font-bold tracking-tight text-white">Recently Played</h2>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid w-full min-w-0 grid-flow-col auto-cols-[200px] gap-4 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                         {recentlyPlayed.map((item, index) => {
                             const isCurrent = (currentTrack?._id && currentTrack._id === item._id) || 
                                               (currentTrack?.audioUrl && currentTrack.audioUrl === item.audioUrl)
@@ -89,7 +89,7 @@ const Main = () => {
                             return (
                                 <div 
                                     key={item._id || index} 
-                                    onClick={() => isCurrent ? togglePlay() : playTrack(item)} 
+                                    onClick={() => isCurrent ? togglePlay() : playTrack(item, recentlyPlayed)} 
                                     className={`bg-[#161922] p-4 rounded-xl flex flex-col gap-3 group hover:bg-[#1c202d] transition-all cursor-pointer border ${
                                         isCurrent ? 'border-[#00f2fe] bg-[#1c2233]' : 'border-gray-800/40 hover:border-gray-700'
                                     }`}
@@ -108,6 +108,8 @@ const Main = () => {
                 </div>
             )}
 
+            {/* SECTION 2: MADE FOR YOU */}
+
             <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-bold tracking-tight text-white">Made For You</h2>
@@ -118,7 +120,7 @@ const Main = () => {
                 ) : songs.length === 0 ? (
                     <div className="text-gray-500 text-sm py-2">No additional tracks found in database.</div>
                 ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid w-full min-w-0 grid-flow-col auto-cols-[200px] gap-4 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                         {songs.map((item, index) => {
                             const isCurrent = (currentTrack?._id && currentTrack._id === item._id) || 
                                               (currentTrack?.audioUrl && currentTrack.audioUrl === item.audioUrl)
@@ -126,8 +128,8 @@ const Main = () => {
                             return (
                                 <div 
                                     key={item._id || index} 
-                                    onClick={() => isCurrent ? togglePlay() : playTrack(item)} 
-                                    className={`bg-[#161922] p-4 rounded-xl flex flex-col gap-3 group hover:bg-[#1c202d] transition-all cursor-pointer border ${
+                                    onClick={() => isCurrent ? togglePlay() : playTrack(item, songs)} 
+                                    className={`bg-[#161922] p-4 rounded-xl flex flex-col gap-3 group hover:bg-[#1c202d] hover:scale-95 hover:-translate-y-2 hover:z-20 hover:shadow-[0_0_25px_rgba(0,242,254,0.25)] transition-all cursor-pointer border ${
                                         isCurrent ? 'border-[#00f2fe] bg-[#1c2233]' : 'border-gray-800/40 hover:border-gray-700'
                                     }`}
                                 >
