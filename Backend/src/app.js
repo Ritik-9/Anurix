@@ -6,6 +6,7 @@ const musicRoutes = require('./authRoutes/music.routes')
 const uploadRoutes=require('./authRoutes/upload.routes')
 const searchRoutes=require('./authRoutes/search.routes')
 const authRoutes=require('./authRoutes/auth.routes')
+const playlistsRoutes=require('./authRoutes/playlists.routes')
 
 app.use(express.json())
 app.use(cors({
@@ -18,4 +19,5 @@ app.use('/api/music', musicRoutes)
 app.use('/api/upload', uploadRoutes)
 app.use('/api/search', searchRoutes)
 app.use('/api/auth',authRoutes)
+app.use('/api/playlists',playlistsRoutes)
 module.exports=app

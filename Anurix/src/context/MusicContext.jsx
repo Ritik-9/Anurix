@@ -35,6 +35,15 @@ const DEFAULT_SONGS = [
 
 export const MusicProvider = ({ children }) => {
   const [isPlaying, setIsPlaying] = useState(false)
+  const [selectedPlaylist, setSelectedPlaylist] = useState(null) 
+
+  // --- Toast Notification State ---
+  const [toastMessage, setToastMessage] = useState(null)
+
+  const showToast = (msg) => {
+    setToastMessage(msg)
+    setTimeout(() => setToastMessage(null), 3000)
+  }
 
   const [currentTrack, setCurrentTrack] = useState(() => {
     try {
@@ -65,9 +74,82 @@ export const MusicProvider = ({ children }) => {
   })
   const [token, setToken] = useState(() => localStorage.getItem('anurix_token') || null)
 
-
   const [queue, setQueue] = useState(DEFAULT_SONGS)
   const [currentIndex, setCurrentIndex] = useState(0)
+
+  // Playlist Create Modal State
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+
+  const openCreatePlaylistModal = () => {
+    setCurrentView('playlists')
+    setIsCreateModalOpen(true)
+  }
+
+  const closeCreatePlaylistModal = () => {
+    setIsCreateModalOpen(false)
+  }
+
+  // --- Add Song to Playlist Function ---
+  const addSongToPlaylist = async (playlistId, track) => {
+  try {
+    const res = await fetch(`http://localhost:3000/api/playlists/${playlistId}/songs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ song: track })
+    })
+
+    const data = await res.json()
+    if (!res.ok) {
+      showToast(data.message || 'Failed to add song to playlist')
+      return false
+    }
+
+    // Update active selectedPlaylist in real-time if selected
+    if (selectedPlaylist && selectedPlaylist._id === playlistId) {
+      setSelectedPlaylist(data)
+    }
+
+    showToast('Song added successfully!')
+    return true
+  } catch (err) {
+    console.error('Error adding song to playlist:', err)
+    showToast('Server error while adding song')
+    return false
+  }
+}
+
+  // --- Remove Song from Playlist Function ---
+  const removeSongFromPlaylist = async (playlistId, songIdentifier) => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/playlists/${playlistId}/songs/${songIdentifier}`, {
+        method: 'DELETE',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        showToast(data.message || 'Failed to remove song')
+        return false
+      }
+
+      // Update active selectedPlaylist instantly in real-time
+      if (selectedPlaylist && selectedPlaylist._id === playlistId) {
+        setSelectedPlaylist(data)
+      }
+
+      showToast('Song removed from playlist')
+      return true
+    } catch (err) {
+      console.error('Error removing song:', err)
+      showToast('Server error removing song')
+      return false
+    }
+  }
 
   const queueRef = useRef(queue)
   const currentIndexRef = useRef(currentIndex)
@@ -190,7 +272,6 @@ export const MusicProvider = ({ children }) => {
     if (currentTrack && currentTrack.audioUrl && currentTrack.audioUrl !== "#") {
       audioRef.current.src = currentTrack.audioUrl
       
-
       localStorage.setItem('anurix_last_track', JSON.stringify(currentTrack))
 
       if (isPlaying) {
@@ -234,7 +315,6 @@ export const MusicProvider = ({ children }) => {
       return finalQueue
     })
     
-    isPlaying ? null : setIsPlaying(true)
     setIsPlaying(true)
   }
 
@@ -267,8 +347,22 @@ export const MusicProvider = ({ children }) => {
       user,
       token,
       loginUser,
-      logoutUser
+      logoutUser,
+      isCreateModalOpen,
+      setIsCreateModalOpen,
+      openCreatePlaylistModal,
+      closeCreatePlaylistModal,
+      selectedPlaylist,
+      setSelectedPlaylist,
+      addSongToPlaylist,
+      removeSongFromPlaylist
     }}>
+      {/* Toast Notification Banner */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 bg-[#00f2fe] text-black font-bold px-5 py-3 rounded-xl shadow-2xl z-50 text-xs flex items-center gap-2 animate-bounce">
+          <span>🎵</span> {toastMessage}
+        </div>
+      )}
       {children}
     </MusicContext.Provider>
   )

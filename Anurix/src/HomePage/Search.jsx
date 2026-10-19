@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useMusic } from '../context/MusicContext'
+import AddToPlaylistMenu from '../components/AddToPlaylistMenu'
 
 const Search = () => {
     const { playTrack } = useMusic()
@@ -34,7 +35,6 @@ const Search = () => {
         <div className="bg-[#12141c] rounded-2xl p-6 overflow-y-auto h-full text-white">
             <h1 className="text-3xl font-extrabold tracking-tight mb-6">Explore & Search</h1>
             
-        
             <div className="relative mb-8">
                 <input 
                     type="text"
@@ -45,7 +45,6 @@ const Search = () => {
                 />
             </div>
 
-            
             {loading && <p className="text-sm text-gray-400">Searching the ocean of music...</p>}
 
             {!loading && results.length > 0 && (
@@ -54,7 +53,7 @@ const Search = () => {
                         <div 
                             key={item._id} 
                             onClick={() => playTrack(item)}
-                            className="bg-[#161922] p-4 rounded-xl flex flex-col gap-3 group hover:bg-[#1c202d] transition-all cursor-pointer border border-gray-800/40"
+                            className="bg-[#161922] p-4 rounded-xl flex flex-col gap-3 group hover:bg-[#1c202d] transition-all cursor-pointer border border-gray-800/40 relative"
                         >
                             <div className="w-full h-36 bg-[#161922] rounded-lg overflow-hidden flex items-center justify-center relative shadow-md border border-gray-800/50">
                                 {item.cover && (item.cover.startsWith('http') || item.cover.startsWith('https')) ? (
@@ -63,13 +62,11 @@ const Search = () => {
                                         alt={`Album cover for ${item.title}`} 
                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" 
                                         onError={(e) => {
-                                           
                                             e.target.style.display = 'none';
                                             e.target.nextSibling.style.display = 'flex';
                                         }}
                                     />
                                 ) : null}
-                                
                                 
                                 <span 
                                     className={`text-4xl group-hover:scale-110 transition-transform duration-300 ${item.cover && (item.cover.startsWith('http') || item.cover.startsWith('https')) ? 'hidden' : 'flex'}`}
@@ -77,9 +74,14 @@ const Search = () => {
                                     {item.cover && !(item.cover.startsWith('http') || item.cover.startsWith('https')) ? item.cover : "🎵"}
                                 </span>
                             </div>
-                            <div>
-                                <h3 className="text-sm font-semibold text-white truncate">{item.title}</h3>
-                                <p className="text-xs text-gray-400 truncate mt-0.5">{item.artist}</p>
+
+                            {/* Title, Artist, and Add to Playlist Action */}
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="truncate">
+                                    <h3 className="text-sm font-semibold text-white truncate">{item.title}</h3>
+                                    <p className="text-xs text-gray-400 truncate mt-0.5">{item.artist}</p>
+                                </div>
+                                <AddToPlaylistMenu track={item} />
                             </div>
                         </div>
                     ))}

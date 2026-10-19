@@ -1,11 +1,23 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useMusic } from '../context/MusicContext'
+import AddToPlaylistMenu from '../components/AddToPlaylistMenu'
 
 const Main = () => {
     const { playTrack, recentlyPlayed, currentTrack, isPlaying, togglePlay } = useMusic()
 
     const [songs, setSongs] = useState([])
     const [loading, setLoading] = useState(true)
+
+    // Refs for horizontal scrolling with mouse wheel
+    const recentlyPlayedRef = useRef(null)
+    const madeForYouRef = useRef(null)
+
+    const handleWheelScroll = (ref, e) => {
+        if (ref.current) {
+            e.preventDefault()
+            ref.current.scrollLeft += e.deltaY
+        }
+    }
 
     useEffect(() => {
         fetch('http://localhost:3000/api/music')
@@ -25,7 +37,6 @@ const Main = () => {
 
     const renderCover = (item) => {
         const imageUrl = item.coverUrl || item.cover || item.albumArt || item.img
-
         const isUrl = imageUrl && typeof imageUrl === 'string' && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))
 
         return (
@@ -46,8 +57,8 @@ const Main = () => {
     }
 
     return (
-        <div className="bg-[#12141c] rounded-2xl p-6 overflow-y-auto flex flex-col gap-8">
-            <div className="relative w-full h-70 rounded-2xl overflow-hidden p-8 flex flex-col justify-end bg-linear-to-r from-[#1a2332] to-[#0f141f] border border-gray-800/50 shadow-2xl">
+        <div className="bg-[#12141c] rounded-2xl p-6 overflow-y-auto flex flex-col gap-8 min-w-0 w-full">
+            <div className="relative w-full h-70 rounded-2xl overflow-hidden p-8 flex flex-col justify-end bg-linear-to-r from-[#1a2332] to-[#0f141f] border border-gray-800/50 shadow-2xl shrink-0">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-[#00f2fe]/10 rounded-full blur-3xl pointer-events-none"></div>
                 <div className="relative z-10 flex flex-col gap-3">
                     <span className="text-xs uppercase tracking-widest text-[#00f2fe] font-semibold">Featured Album</span>
@@ -76,41 +87,49 @@ const Main = () => {
 
             {/* SECTION 1: RECENTLY PLAYED */}
             {recentlyPlayed && recentlyPlayed.length > 0 && (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 min-w-0 w-full">
                     <div className="flex items-center justify-between">
                         <h2 className="text-xl font-bold tracking-tight text-white">Recently Played</h2>
                     </div>
 
-                    <div className="grid w-full min-w-0 grid-flow-col auto-cols-[200px] gap-4 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                        {recentlyPlayed.map((item, index) => {
-                            const isCurrent = (currentTrack?._id && currentTrack._id === item._id) || 
-                                              (currentTrack?.audioUrl && currentTrack.audioUrl === item.audioUrl)
+                    <div 
+                        ref={recentlyPlayedRef}
+                        onWheel={(e) => handleWheelScroll(recentlyPlayedRef, e)}
+                        className="w-full overflow-x-auto min-w-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab active:cursor-grabbing"
+                    >
+                        <div className="flex flex-row gap-4 pb-2 w-max">
+                            {recentlyPlayed.map((item, index) => {
+                                const isCurrent = (currentTrack?._id && currentTrack._id === item._id) || 
+                                                  (currentTrack?.audioUrl && currentTrack.audioUrl === item.audioUrl)
 
-                            return (
-                                <div 
-                                    key={item._id || index} 
-                                    onClick={() => isCurrent ? togglePlay() : playTrack(item, recentlyPlayed)} 
-                                    className={`bg-[#161922] p-4 rounded-xl flex flex-col gap-3 group hover:bg-[#1c202d] transition-all cursor-pointer border ${
-                                        isCurrent ? 'border-[#00f2fe] bg-[#1c2233]' : 'border-gray-800/40 hover:border-gray-700'
-                                    }`}
-                                >
-                                    {renderCover(item)}
-                                    <div>
-                                        <h3 className={`text-sm font-semibold truncate ${isCurrent ? 'text-[#00f2fe]' : 'text-white'}`}>
-                                            {item.title}
-                                        </h3>
-                                        <p className="text-xs text-gray-400 truncate mt-0.5">{item.artist}</p>
+                                return (
+                                    <div 
+                                        key={item._id || index} 
+                                        onClick={() => isCurrent ? togglePlay() : playTrack(item, recentlyPlayed)} 
+                                        className={`w-[200px] min-w-[200px] flex-shrink-0 bg-[#161922] p-4 rounded-xl flex flex-col gap-3 group hover:bg-[#1c202d] hover:scale-95 transition-all duration-300 cursor-pointer border ${
+                                            isCurrent ? 'border-[#00f2fe] bg-[#1c2233]' : 'border-gray-800/40 hover:border-gray-700'
+                                        }`}
+                                    >
+                                        {renderCover(item)}
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="truncate">
+                                                <h3 className={`text-sm font-semibold truncate ${isCurrent ? 'text-[#00f2fe]' : 'text-white'}`}>
+                                                    {item.title}
+                                                </h3>
+                                                <p className="text-xs text-gray-400 truncate mt-0.5">{item.artist}</p>
+                                            </div>
+                                            <AddToPlaylistMenu track={item} />
+                                        </div>
                                     </div>
-                                </div>
-                            )
-                        })}
+                                )
+                            })}
+                        </div>
                     </div>
                 </div>
             )}
 
             {/* SECTION 2: MADE FOR YOU */}
-
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 min-w-0 w-full">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-bold tracking-tight text-white">Made For You</h2>
                 </div>
@@ -120,29 +139,38 @@ const Main = () => {
                 ) : songs.length === 0 ? (
                     <div className="text-gray-500 text-sm py-2">No additional tracks found in database.</div>
                 ) : (
-                    <div className="grid w-full min-w-0 grid-flow-col auto-cols-[200px] gap-4 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                        {songs.map((item, index) => {
-                            const isCurrent = (currentTrack?._id && currentTrack._id === item._id) || 
-                                              (currentTrack?.audioUrl && currentTrack.audioUrl === item.audioUrl)
+                    <div 
+                        ref={madeForYouRef}
+                        onWheel={(e) => handleWheelScroll(madeForYouRef, e)}
+                        className="w-full overflow-x-auto min-w-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab active:cursor-grabbing"
+                    >
+                        <div className="flex flex-row gap-4 pb-2 w-max">
+                            {songs.map((item, index) => {
+                                const isCurrent = (currentTrack?._id && currentTrack._id === item._id) || 
+                                                  (currentTrack?.audioUrl && currentTrack.audioUrl === item.audioUrl)
 
-                            return (
-                                <div 
-                                    key={item._id || index} 
-                                    onClick={() => isCurrent ? togglePlay() : playTrack(item, songs)} 
-                                    className={`bg-[#161922] p-4 rounded-xl flex flex-col gap-3 group hover:bg-[#1c202d] hover:scale-95 hover:-translate-y-2 hover:z-20 hover:shadow-[0_0_25px_rgba(0,242,254,0.25)] transition-all cursor-pointer border ${
-                                        isCurrent ? 'border-[#00f2fe] bg-[#1c2233]' : 'border-gray-800/40 hover:border-gray-700'
-                                    }`}
-                                >
-                                    {renderCover(item)}
-                                    <div>
-                                        <h3 className={`text-sm font-semibold truncate ${isCurrent ? 'text-[#00f2fe]' : 'text-white'}`}>
-                                            {item.title}
-                                        </h3>
-                                        <p className="text-xs text-gray-400 truncate mt-0.5">{item.artist}</p>
+                                return (
+                                    <div 
+                                        key={item._id || index} 
+                                        onClick={() => isCurrent ? togglePlay() : playTrack(item, songs)} 
+                                        className={`w-[200px] min-w-[200px] flex-shrink-0 bg-[#161922] p-4 rounded-xl flex flex-col gap-3 group hover:bg-[#1c202d] hover:scale-95 transition-all duration-300 cursor-pointer border ${
+                                            isCurrent ? 'border-[#00f2fe] bg-[#1c2233]' : 'border-gray-800/40 hover:border-gray-700'
+                                        }`}
+                                    >
+                                        {renderCover(item)}
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="truncate">
+                                                <h3 className={`text-sm font-semibold truncate ${isCurrent ? 'text-[#00f2fe]' : 'text-white'}`}>
+                                                    {item.title}
+                                                </h3>
+                                                <p className="text-xs text-gray-400 truncate mt-0.5">{item.artist}</p>
+                                            </div>
+                                            <AddToPlaylistMenu track={item} />
+                                        </div>
                                     </div>
-                                </div>
-                            )
-                        })}
+                                )
+                            })}
+                        </div>
                     </div>
                 )}
             </div>
