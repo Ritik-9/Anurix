@@ -1,31 +1,24 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useMusic } from '../context/MusicContext'
 import AddToPlaylistMenu from '../components/AddToPlaylistMenu'
+import UploadTrackModal from '../components/UploadTrackModal'
 
 const Main = () => {
-    const { playTrack, recentlyPlayed, currentTrack, isPlaying, togglePlay } = useMusic()
+    const { playTrack, recentlyPlayed, currentTrack, isPlaying, togglePlay, user } = useMusic()
 
     const [songs, setSongs] = useState([])
     const [loading, setLoading] = useState(true)
+    const [isUploadOpen, setIsUploadOpen] = useState(false)
 
-    // Refs for horizontal scrolling with mouse wheel
-    const recentlyPlayedRef = useRef(null)
-    const madeForYouRef = useRef(null)
+    const userId = user?._id || user?.id || user?.userId
 
-    const handleWheelScroll = (ref, e) => {
-        if (ref.current) {
-            e.preventDefault()
-            ref.current.scrollLeft += e.deltaY
-        }
-    }
-
-    useEffect(() => {
-        fetch('http://localhost:3000/api/music')
+    const fetchSongs = () => {
+        const url = `http://localhost:3000/api/music`
+        fetch(url)
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {
-                    const shuffled = [...data].sort(() => Math.random() - 0.5)
-                    setSongs(shuffled)
+                    setSongs(data)
                 }
                 setLoading(false)
             })
@@ -33,14 +26,19 @@ const Main = () => {
                 console.error("Failed to fetch songs:", err)
                 setLoading(false)
             })
-    }, [])
+    }
+
+    useEffect(() => {
+        fetchSongs()
+    }, [userId])
 
     const renderCover = (item) => {
         const imageUrl = item.coverUrl || item.cover || item.albumArt || item.img
+
         const isUrl = imageUrl && typeof imageUrl === 'string' && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))
 
         return (
-            <div className="w-full h-36 bg-linear-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden flex items-center justify-center relative">
+            <div className="w-full h-36 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden flex items-center justify-center relative">
                 {isUrl ? (
                     <img 
                         src={imageUrl} 
@@ -57,8 +55,9 @@ const Main = () => {
     }
 
     return (
-        <div className="bg-[#12141c] rounded-2xl p-6 overflow-y-auto flex flex-col gap-8 min-w-0 w-full">
-            <div className="relative w-full h-70 rounded-2xl overflow-hidden p-8 flex flex-col justify-end bg-linear-to-r from-[#1a2332] to-[#0f141f] border border-gray-800/50 shadow-2xl shrink-0">
+        <div className="bg-[#12141c] rounded-2xl p-6 overflow-y-auto flex flex-col gap-8 min-w-0 w-full overflow-x-hidden">
+            {/* Banner Section */}
+            <div className="relative w-full h-70 rounded-2xl overflow-hidden p-8 flex flex-col justify-end bg-gradient-to-r from-[#1a2332] to-[#0f141f] border border-gray-800/50 shadow-2xl shrink-0">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-[#00f2fe]/10 rounded-full blur-3xl pointer-events-none"></div>
                 <div className="relative z-10 flex flex-col gap-3">
                     <span className="text-xs uppercase tracking-widest text-[#00f2fe] font-semibold">Featured Album</span>
@@ -92,11 +91,7 @@ const Main = () => {
                         <h2 className="text-xl font-bold tracking-tight text-white">Recently Played</h2>
                     </div>
 
-                    <div 
-                        ref={recentlyPlayedRef}
-                        onWheel={(e) => handleWheelScroll(recentlyPlayedRef, e)}
-                        className="w-full overflow-x-auto min-w-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab active:cursor-grabbing"
-                    >
+                    <div className="w-full overflow-x-auto min-w-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                         <div className="flex flex-row gap-4 pb-2 w-max">
                             {recentlyPlayed.map((item, index) => {
                                 const isCurrent = (currentTrack?._id && currentTrack._id === item._id) || 
@@ -132,6 +127,12 @@ const Main = () => {
             <div className="flex flex-col gap-4 min-w-0 w-full">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-bold tracking-tight text-white">Made For You</h2>
+                    <button 
+                        onClick={() => setIsUploadOpen(true)}
+                        className="bg-[#00f2fe]/10 text-[#00f2fe] border border-[#00f2fe]/30 font-semibold px-4 py-1.5 rounded-xl text-xs hover:bg-[#00f2fe] hover:text-black transition-all cursor-pointer flex items-center gap-1.5"
+                    >
+                        <span>+</span> Upload Song
+                    </button>
                 </div>
 
                 {loading ? (
@@ -139,11 +140,7 @@ const Main = () => {
                 ) : songs.length === 0 ? (
                     <div className="text-gray-500 text-sm py-2">No additional tracks found in database.</div>
                 ) : (
-                    <div 
-                        ref={madeForYouRef}
-                        onWheel={(e) => handleWheelScroll(madeForYouRef, e)}
-                        className="w-full overflow-x-auto min-w-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab active:cursor-grabbing"
-                    >
+                    <div className="w-full overflow-x-auto min-w-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                         <div className="flex flex-row gap-4 pb-2 w-max">
                             {songs.map((item, index) => {
                                 const isCurrent = (currentTrack?._id && currentTrack._id === item._id) || 
@@ -157,7 +154,14 @@ const Main = () => {
                                             isCurrent ? 'border-[#00f2fe] bg-[#1c2233]' : 'border-gray-800/40 hover:border-gray-700'
                                         }`}
                                     >
-                                        {renderCover(item)}
+                                        <div className="relative">
+                                            {renderCover(item)}
+                                            {item.isPublic === false && (
+                                                <span className="absolute top-2 right-2 bg-black/70 backdrop-blur-md text-[10px] text-gray-300 px-2 py-0.5 rounded-md border border-gray-700">
+                                                    🔒 Private
+                                                </span>
+                                            )}
+                                        </div>
                                         <div className="flex items-center justify-between gap-2">
                                             <div className="truncate">
                                                 <h3 className={`text-sm font-semibold truncate ${isCurrent ? 'text-[#00f2fe]' : 'text-white'}`}>
@@ -174,6 +178,13 @@ const Main = () => {
                     </div>
                 )}
             </div>
+
+            {/* Song Upload Modal */}
+            <UploadTrackModal 
+                isOpen={isUploadOpen} 
+                onClose={() => setIsUploadOpen(false)} 
+                onSongUploaded={(newSong) => setSongs(prev => [newSong, ...prev])} 
+            />
         </div>
     )
 }

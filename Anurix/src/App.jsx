@@ -8,6 +8,7 @@ import PlaylistsView from './components/PlaylistsView'
 import Login from './components/Login'
 import Signup from './components/Signup'
 import SplashScreen from './components/Splashscreen'
+import YourCreationsView from './components/YourCreationsView'
 
 const SearchView = () => <div className="text-2xl font-bold p-6"><Search /></div>
 const ExploreView = () => <div className="text-2xl font-bold p-6">🚀 Explore View (Coming Soon)</div>
@@ -51,6 +52,7 @@ const App = () => {
         {currentView === 'explore' && <ExploreView />}
         {currentView === 'library' && <LibraryView />}
         {currentView === 'playlists' && <PlaylistsView />}
+        {currentView === 'creations' && <YourCreationsView />}
       </main>
       <div className="col-span-full -mx-3 bg-[#12141c] border-t border-gray-800/40 flex items-center">
         <Footer />

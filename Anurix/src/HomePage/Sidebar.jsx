@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { House, Search, Telescope, Library, ListPlus, LogOut, Plus, Music } from 'lucide-react'
+import { House, Search, Telescope, Library, ListPlus, LogOut, Plus, Music, Sparkles } from 'lucide-react'
 import { useMusic } from '../context/MusicContext'
 
 const Sidebar = () => {
   const [showPlaylist, setShowPlaylist] = useState(true)
   const [userPlaylists, setUserPlaylists] = useState([])
   
-  // ADD setSelectedPlaylist HERE:
   const { currentView, setCurrentView, user, logoutUser, openCreatePlaylistModal, setSelectedPlaylist } = useMusic()
 
   // Fetch playlists for the sidebar dropdown
@@ -59,6 +58,14 @@ const Sidebar = () => {
         </button>
         <button onClick={() => { setSelectedPlaylist(null); setCurrentView('library'); }} className={getBtnClass('library')}>
           <span><Library size={20} /></span>Your Library
+        </button>
+
+        {/* Updated Your Creations Button */}
+        <button 
+          onClick={() => { setSelectedPlaylist(null); setCurrentView('creations'); }} 
+          className={getBtnClass('creations')}
+        >
+          <span><Sparkles size={20} className="text-[#00f2fe]" /></span>Your Creations
         </button>
 
         {/* Playlists Dropdown Section */}
