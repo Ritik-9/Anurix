@@ -2,10 +2,11 @@ const Music = require('../model/music.model')
 
 const getAllTracks = async (req, res) => {
   try {
-    const tracks = await Music.find()
-    res.status(200).json(tracks)
+    const limit = parseInt(req.query.limit) || 100; // Defaults to 100
+    const tracks = await Music.find().limit(limit);
+    res.status(200).json(tracks);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch tracks", error: error.message })
+    res.status(500).json({ message: "Failed to fetch tracks", error: error.message });
   }
 }
 
@@ -14,7 +15,7 @@ const seedTracks = async (req, res) => {
     let formattedTracks = []
 
     try {
-      const ITUNES_API_URL = 'https://itunes.apple.com/search?term=pop&entity=song&limit=20'
+      const ITUNES_API_URL = 'https://itunes.apple.com/search?term=pop&entity=song&limit=100'
       const response = await fetch(ITUNES_API_URL)
       const data = await response.json()
 

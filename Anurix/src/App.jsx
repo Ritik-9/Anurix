@@ -4,6 +4,7 @@ import Main from './main/main'
 import Footer from './footer/footer'
 import { useMusic } from './context/MusicContext'
 import Search from './HomePage/Search'
+import ExploreView from './HomePage/ExploreView'
 import PlaylistsView from './components/PlaylistsView'
 import Login from './components/Login'
 import Signup from './components/Signup'
@@ -11,7 +12,7 @@ import SplashScreen from './components/Splashscreen'
 import YourCreationsView from './components/YourCreationsView'
 
 const SearchView = () => <div className="text-2xl font-bold p-6"><Search /></div>
-const ExploreView = () => <div className="text-2xl font-bold p-6">🚀 Explore View (Coming Soon)</div>
+const Explore = () => <div className="text-2xl font-bold p-6"><ExploreView /></div>
 const LibraryView = () => <div className="text-2xl font-bold p-6">📚 Your Library View (Coming Soon)</div>
 
 const App = () => {
@@ -49,7 +50,7 @@ const App = () => {
       <main className="bg-[#12141c] rounded-2xl overflow-y-auto min-w-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {currentView === 'home' && <Main />}
         {currentView === 'search' && <SearchView />}
-        {currentView === 'explore' && <ExploreView />}
+        {currentView === 'explore' && <Explore />}
         {currentView === 'library' && <LibraryView />}
         {currentView === 'playlists' && <PlaylistsView />}
         {currentView === 'creations' && <YourCreationsView />}
