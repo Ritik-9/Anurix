@@ -15,7 +15,10 @@ const seedTracks = async (req, res) => {
     let formattedTracks = []
 
     try {
-      const ITUNES_API_URL = 'https://itunes.apple.com/search?term=pop&entity=song&limit=100'
+      const terms = ['pop', 'indie', 'rock', 'dance', 'chill'];
+      const randomTerm = terms[Math.floor(Math.random() * terms.length)];
+      // const safeTerm = encodeURIComponent(randomTerm);
+      const ITUNES_API_URL = `https://itunes.apple.com/search?term=${randomTerm}&entity=song&limit=100`
       const response = await fetch(ITUNES_API_URL)
       const data = await response.json()
 

@@ -60,9 +60,9 @@ const Main = () => {
             <div className="relative w-full h-70 rounded-2xl overflow-hidden p-8 flex flex-col justify-end bg-gradient-to-r from-[#1a2332] to-[#0f141f] border border-gray-800/50 shadow-2xl shrink-0">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-[#00f2fe]/10 rounded-full blur-3xl pointer-events-none"></div>
                 <div className="relative z-10 flex flex-col gap-3">
-                    <span className="text-xs uppercase tracking-widest text-[#00f2fe] font-semibold">Featured Album</span>
-                    <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-white">Midnight Drive</h1>
-                    <p className="text-sm text-gray-400 font-medium">SYNTHWAVE COLLECTIVE • 12 Songs</p>
+                    <span className="text-xs uppercase tracking-widest text-[#00f2fe] font-semibold">Welcome To</span>
+                    <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-white">Anurix</h1>
+                    <p className="text-sm text-gray-400 font-medium">Light your mood with music</p>
                     <div>
                         <button 
                             onClick={() => {

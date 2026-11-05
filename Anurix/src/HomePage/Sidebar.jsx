@@ -1,12 +1,37 @@
 import React, { useState, useEffect } from 'react'
-import { House, Search, Telescope, Library, ListPlus, LogOut, Plus, Music, Sparkles } from 'lucide-react'
+import { House, Search, Telescope, Library, ListPlus, LogOut, Plus, Music, Sparkles,LoaderCircle } from 'lucide-react'
 import { useMusic } from '../context/MusicContext'
+
+
 
 const Sidebar = () => {
   const [showPlaylist, setShowPlaylist] = useState(true)
   const [userPlaylists, setUserPlaylists] = useState([])
+  const [isRefreshing,setIsRefreshing]=useState(false)
   
   const { currentView, setCurrentView, user, logoutUser, openCreatePlaylistModal, setSelectedPlaylist } = useMusic()
+
+  const refresh=async()=>{
+    setIsRefreshing(true)
+    try{
+      const response=await fetch('http://localhost:3000/api/music/seed',{
+        method:'POST'
+      })
+      const data= await response.json()
+
+      if(response.ok && data.seededTracks && data.seededTracks.length > 0){
+        console.log("Loaded Successfully")
+        window.location.reload()
+      }
+      else{
+        console.log("Failed to fetch",data.message || "Unknown Error")
+        setIsRefreshing(false)
+      }
+    }catch(error){
+      console.log("Seeding Failed :",error)
+      setIsRefreshing(false)
+    }
+  }
 
   // Fetch playlists for the sidebar dropdown
   useEffect(() => {
@@ -47,8 +72,11 @@ const Sidebar = () => {
           <span>Anurix</span>
         </div>
 
-        <button onClick={() => { setSelectedPlaylist(null); setCurrentView('home'); }} className={getBtnClass('home')}>
-          <span><House size={20} /></span>Home
+        <button onClick={() => { setSelectedPlaylist(null); setCurrentView('home'); }}
+                onDoubleClick={refresh}
+                className={getBtnClass('home')}>
+          <span>
+            {isRefreshing?(<LoaderCircle size={20} className="animate-spin text-[#00f2fe]"/>):(<House size={20} />)}</span>{isRefreshing ? "Refreshing..." : "Home"}
         </button>
         <button onClick={() => { setSelectedPlaylist(null); setCurrentView('search'); }} className={getBtnClass('search')}>
           <span><Search size={20} /></span>Search
