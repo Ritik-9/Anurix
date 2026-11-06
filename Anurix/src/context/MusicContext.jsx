@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect } from 'react'
+import { useSocket } from './SocketContext'
 
 const MusicContext = createContext()
 
@@ -37,7 +38,6 @@ export const MusicProvider = ({ children }) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [selectedPlaylist, setSelectedPlaylist] = useState(null) 
 
-  // --- Toast Notification State ---
   const [toastMessage, setToastMessage] = useState(null)
 
   const showToast = (msg) => {
@@ -77,7 +77,6 @@ export const MusicProvider = ({ children }) => {
   const [queue, setQueue] = useState(DEFAULT_SONGS)
   const [currentIndex, setCurrentIndex] = useState(0)
 
-  // Playlist Create Modal State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   const openCreatePlaylistModal = () => {
@@ -89,39 +88,36 @@ export const MusicProvider = ({ children }) => {
     setIsCreateModalOpen(false)
   }
 
-  // --- Add Song to Playlist Function ---
   const addSongToPlaylist = async (playlistId, track) => {
-  try {
-    const res = await fetch(`http://localhost:3000/api/playlists/${playlistId}/songs`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-      },
-      body: JSON.stringify({ song: track })
-    })
+    try {
+      const res = await fetch(`http://localhost:3000/api/playlists/${playlistId}/songs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ song: track })
+      })
 
-    const data = await res.json()
-    if (!res.ok) {
-      showToast(data.message || 'Failed to add song to playlist')
+      const data = await res.json()
+      if (!res.ok) {
+        showToast(data.message || 'Failed to add song to playlist')
+        return false
+      }
+
+      if (selectedPlaylist && selectedPlaylist._id === playlistId) {
+        setSelectedPlaylist(data)
+      }
+
+      showToast('Song added successfully!')
+      return true
+    } catch (err) {
+      console.error('Error adding song to playlist:', err)
+      showToast('Server error while adding song')
       return false
     }
-
-    // Update active selectedPlaylist in real-time if selected
-    if (selectedPlaylist && selectedPlaylist._id === playlistId) {
-      setSelectedPlaylist(data)
-    }
-
-    showToast('Song added successfully!')
-    return true
-  } catch (err) {
-    console.error('Error adding song to playlist:', err)
-    showToast('Server error while adding song')
-    return false
   }
-}
 
-  // --- Remove Song from Playlist Function ---
   const removeSongFromPlaylist = async (playlistId, songIdentifier) => {
     try {
       const res = await fetch(`http://localhost:3000/api/playlists/${playlistId}/songs/${songIdentifier}`, {
@@ -137,7 +133,6 @@ export const MusicProvider = ({ children }) => {
         return false
       }
 
-      // Update active selectedPlaylist instantly in real-time
       if (selectedPlaylist && selectedPlaylist._id === playlistId) {
         setSelectedPlaylist(data)
       }
@@ -168,6 +163,48 @@ export const MusicProvider = ({ children }) => {
   const [currentView, setCurrentView] = useState('home')
 
   const audioRef = useRef(new Audio())
+
+  
+  const { activeRoom, isHost, syncPlayback, syncedPlayback } = useSocket()
+
+  
+  const broadcastHostState = (track, isPlayingState, time) => {
+    if (activeRoom && isHost) {
+      syncPlayback(activeRoom, track, isPlayingState, time)
+    }
+  }
+
+  
+  useEffect(() => {
+    if (activeRoom && !isHost && syncedPlayback) {
+      const { currentTrack: hostTrack, isPlaying: hostIsPlaying, currentTime: hostTime, timeStamp } = syncedPlayback
+
+      // Step A: Update track if Host switched songs
+      if (hostTrack && (currentTrack?._id !== hostTrack._id || currentTrack?.audioUrl !== hostTrack.audioUrl)) {
+        setCurrentTrack(hostTrack)
+      }
+
+      
+      if (audioRef.current) {
+        if (hostIsPlaying) {
+          audioRef.current.play().catch(err => console.log("Autoplay block:", err))
+          setIsPlaying(true)
+        } else {
+          audioRef.current.pause()
+          setIsPlaying(false)
+        }
+
+        
+        const networkLatency = timeStamp ? (Date.now() - timeStamp) / 1000 : 0
+        const targetTime = (hostTime || 0) + networkLatency
+
+        if (Math.abs(audioRef.current.currentTime - targetTime) > 1.5) {
+          audioRef.current.currentTime = targetTime
+          setCurrentTime(targetTime)
+        }
+      }
+    }
+  }, [syncedPlayback, activeRoom, isHost])
 
   const loginUser = (userData, userToken) => {
     setUser(userData)
@@ -221,6 +258,7 @@ export const MusicProvider = ({ children }) => {
       currentIndexRef.current = nextIdx 
       setCurrentTrack(nextSong)
       addToHistory(nextSong)
+      broadcastHostState(nextSong, true, 0) 
     }
     setIsPlaying(true)
   }
@@ -238,9 +276,11 @@ export const MusicProvider = ({ children }) => {
       currentIndexRef.current = prevIdxCalc 
       setCurrentTrack(prevSong)
       addToHistory(prevSong)
+      broadcastHostState(prevSong, true, 0) 
     }
     setIsPlaying(true)
   }
+  
   const nextTrackRef = useRef(nextTrack)
   useEffect(() => {
     nextTrackRef.current = nextTrack
@@ -311,7 +351,8 @@ export const MusicProvider = ({ children }) => {
       setCurrentIndex(targetIndex)
       currentIndexRef.current = targetIndex 
       setCurrentTrack(finalQueue[targetIndex])
-      
+      broadcastHostState(finalQueue[targetIndex], true, 0)
+
       return finalQueue
     })
     
@@ -321,6 +362,7 @@ export const MusicProvider = ({ children }) => {
   const seekAudio = (time) => {
     audioRef.current.currentTime = time
     setCurrentTime(time)
+    broadcastHostState(currentTrack, isPlaying, time) 
   }
 
   const changeVolume = (val) => {
@@ -357,7 +399,6 @@ export const MusicProvider = ({ children }) => {
       addSongToPlaylist,
       removeSongFromPlaylist
     }}>
-      {/* Toast Notification Banner */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 bg-[#00f2fe] text-black font-bold px-5 py-3 rounded-xl shadow-2xl z-50 text-xs flex items-center gap-2 animate-bounce">
           <span>🎵</span> {toastMessage}

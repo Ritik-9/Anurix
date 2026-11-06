@@ -1,5 +1,6 @@
 import React from 'react'
 import { useMusic } from '../context/MusicContext'
+import { useSocket } from '../context/SocketContext' // 👈 1. Import useSocket
 
 const Footer = () => {
   const { 
@@ -15,6 +16,15 @@ const Footer = () => {
     changeVolume
   } = useMusic()
 
+  const { activeRoom, isHost, syncPlayback } = useSocket() // 👈 2. Destructure socket states
+
+  // 📡 Helper to broadcast host actions
+  const broadcastSync = (track, playingState, time) => {
+    if (activeRoom && isHost) {
+      syncPlayback(activeRoom, track, playingState, time)
+    }
+  }
+
   const formatTime = (secs) => {
     if (isNaN(secs)) return "0:00"
     const minutes = Math.floor(secs / 60)
@@ -25,13 +35,38 @@ const Footer = () => {
   const handleProgressClick = (e) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const percentage = (e.clientX - rect.left) / rect.width
-    if (duration) seekAudio(percentage * duration)
+    if (duration) {
+      const newTime = percentage * duration
+      seekAudio(newTime)
+      // 📡 Broadcast seek event
+      broadcastSync(currentTrack, isPlaying, newTime)
+    }
   }
 
   const handleVolumeClick = (e) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const percentage = (e.clientX - rect.left) / rect.width
     changeVolume(Math.max(0, Math.min(1, percentage)))
+  }
+
+  // 📡 Wrapped Play/Pause toggle
+  const handleTogglePlay = () => {
+    togglePlay()
+    // Note: since togglePlay toggles the current state, we use !isPlaying for the broadcast
+    broadcastSync(currentTrack, !isPlaying, currentTime)
+  }
+
+  // 📡 Wrapped Next Track
+  const handleNextTrack = () => {
+    nextTrack()
+    // Next track starts at time 0 and is playing
+    broadcastSync(currentTrack, true, 0)
+  }
+
+  // 📡 Wrapped Prev Track
+  const handlePrevTrack = () => {
+    prevTrack()
+    broadcastSync(currentTrack, true, 0)
   }
 
   return (
@@ -64,13 +99,13 @@ const Footer = () => {
       <div className="grid justify-items-center gap-2 w-2/4 max-w-md">
         <div className="flex items-center gap-6 text-gray-400">
           <button className="hover:text-white transition-colors cursor-pointer text-lg">🔀</button>
-          <button onClick={prevTrack} className="hover:text-white transition-colors cursor-pointer text-lg">⏮</button>
+          <button onClick={handlePrevTrack} className="hover:text-white transition-colors cursor-pointer text-lg">⏮</button>
           <button 
-            onClick={togglePlay}
+            onClick={handleTogglePlay}
             className="w-9 h-9 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition-transform cursor-pointer shadow-[0_0_15px_rgba(255,255,255,0.2)]">
             {isPlaying ? '⏸' : '▶'}
           </button>
-          <button onClick={nextTrack} className="hover:text-white transition-colors cursor-pointer text-lg">⏭</button>
+          <button onClick={handleNextTrack} className="hover:text-white transition-colors cursor-pointer text-lg">⏭</button>
           <button className="hover:text-white transition-colors cursor-pointer text-lg">🔁</button>
         </div>
         

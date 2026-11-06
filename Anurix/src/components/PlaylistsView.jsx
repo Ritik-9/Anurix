@@ -15,7 +15,7 @@ const PlaylistsView = () => {
     selectedPlaylist,
     setSelectedPlaylist,
     removeSongFromPlaylist,
-    currentView // <--- ADD THIS HERE
+    currentView 
   } = useMusic()
 
   const [playlists, setPlaylists] = useState([])
@@ -23,7 +23,7 @@ const PlaylistsView = () => {
   const [newPlaylistDesc, setNewPlaylistDesc] = useState('')
   const [loading, setLoading] = useState(true)
 
-  // Fetch user playlists whenever user or currentView changes
+
   useEffect(() => {
     const userId = user?._id || user?.id || user?.userId
     if (!userId) {
@@ -31,14 +31,12 @@ const PlaylistsView = () => {
       return
     }
 
-    // Always fetch latest state from server
     fetch(`http://localhost:3000/api/playlists/user/${userId}`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
           setPlaylists(data)
           
-          // If a playlist is currently selected, sync its updated songs list in real-time
           if (selectedPlaylist) {
             const updatedSelected = data.find(p => p._id === selectedPlaylist._id)
             if (updatedSelected) {
@@ -52,7 +50,7 @@ const PlaylistsView = () => {
         console.error("Failed to fetch playlists:", err)
         setLoading(false)
       })
-  }, [user, currentView]) // <--- RE-FETCH ON VIEW SWITCH
+  }, [user, currentView]) 
 
   const handleCloseModal = () => {
     setNewPlaylistName('')
