@@ -1,6 +1,6 @@
 import React from 'react'
 import { useMusic } from '../context/MusicContext'
-import { useSocket } from '../context/SocketContext' // 👈 1. Import useSocket
+import { useSocket } from '../context/SocketContext' 
 
 const Footer = () => {
   const { 
@@ -16,9 +16,9 @@ const Footer = () => {
     changeVolume
   } = useMusic()
 
-  const { activeRoom, isHost, syncPlayback } = useSocket() // 👈 2. Destructure socket states
+  const { activeRoom, isHost, syncPlayback } = useSocket() 
 
-  // 📡 Helper to broadcast host actions
+ 
   const broadcastSync = (track, playingState, time) => {
     if (activeRoom && isHost) {
       syncPlayback(activeRoom, track, playingState, time)
@@ -38,7 +38,7 @@ const Footer = () => {
     if (duration) {
       const newTime = percentage * duration
       seekAudio(newTime)
-      // 📡 Broadcast seek event
+      
       broadcastSync(currentTrack, isPlaying, newTime)
     }
   }
@@ -49,21 +49,18 @@ const Footer = () => {
     changeVolume(Math.max(0, Math.min(1, percentage)))
   }
 
-  // 📡 Wrapped Play/Pause toggle
+
   const handleTogglePlay = () => {
     togglePlay()
-    // Note: since togglePlay toggles the current state, we use !isPlaying for the broadcast
+   
     broadcastSync(currentTrack, !isPlaying, currentTime)
   }
 
-  // 📡 Wrapped Next Track
   const handleNextTrack = () => {
     nextTrack()
-    // Next track starts at time 0 and is playing
     broadcastSync(currentTrack, true, 0)
   }
 
-  // 📡 Wrapped Prev Track
   const handlePrevTrack = () => {
     prevTrack()
     broadcastSync(currentTrack, true, 0)

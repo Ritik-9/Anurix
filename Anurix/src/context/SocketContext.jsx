@@ -21,6 +21,9 @@ export const SocketProvider = ({ children }) => {
 
     newSocket.on('room:state_update', (room) => {
       setRoomState(room);
+      if (room && newSocket.id) {
+        setIsHost(room.hostSocketId === newSocket.id);
+      }
     });
 
     newSocket.on('player:sync_listener', (data) => {

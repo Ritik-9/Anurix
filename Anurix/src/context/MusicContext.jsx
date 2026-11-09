@@ -58,9 +58,9 @@ export const MusicProvider = ({ children }) => {
     try {
       const savedHistory = localStorage.getItem('anurix_history')
       if (savedHistory) return JSON.parse(savedHistory)
-      return [...DEFAULT_SONGS].sort(() => Math.random() - 0.5)
+      return []
     } catch {
-      return DEFAULT_SONGS
+      return []
     }
   })
 
@@ -163,28 +163,44 @@ export const MusicProvider = ({ children }) => {
   const [currentView, setCurrentView] = useState('home')
 
   const audioRef = useRef(new Audio())
+  const pendingSeekTimeRef = useRef(null) 
 
-  
   const { activeRoom, isHost, syncPlayback, syncedPlayback } = useSocket()
 
-  
+
+  const checkCanControlPlayback = () => {
+    if (activeRoom && !isHost) {
+      showToast("Only the room host can control playback! Leave the room to play custom tracks.")
+      return false
+    }
+    return true
+  }
+
   const broadcastHostState = (track, isPlayingState, time) => {
     if (activeRoom && isHost) {
       syncPlayback(activeRoom, track, isPlayingState, time)
     }
   }
 
-  
   useEffect(() => {
     if (activeRoom && !isHost && syncedPlayback) {
       const { currentTrack: hostTrack, isPlaying: hostIsPlaying, currentTime: hostTime, timeStamp } = syncedPlayback
 
-      // Step A: Update track if Host switched songs
-      if (hostTrack && (currentTrack?._id !== hostTrack._id || currentTrack?.audioUrl !== hostTrack.audioUrl)) {
+      const networkLatency = timeStamp ? (Date.now() - timeStamp) / 1000 : 0
+      const targetTime = (hostTime || 0) + networkLatency
+
+      const isNewTrack = hostTrack && (currentTrack?._id !== hostTrack._id || currentTrack?.audioUrl !== hostTrack.audioUrl)
+
+      if (isNewTrack) {
+        pendingSeekTimeRef.current = targetTime
         setCurrentTrack(hostTrack)
+      } else if (audioRef.current) {
+        if (Math.abs(audioRef.current.currentTime - targetTime) > 1.5) {
+          audioRef.current.currentTime = targetTime
+          setCurrentTime(targetTime)
+        }
       }
 
-      
       if (audioRef.current) {
         if (hostIsPlaying) {
           audioRef.current.play().catch(err => console.log("Autoplay block:", err))
@@ -192,15 +208,6 @@ export const MusicProvider = ({ children }) => {
         } else {
           audioRef.current.pause()
           setIsPlaying(false)
-        }
-
-        
-        const networkLatency = timeStamp ? (Date.now() - timeStamp) / 1000 : 0
-        const targetTime = (hostTime || 0) + networkLatency
-
-        if (Math.abs(audioRef.current.currentTime - targetTime) > 1.5) {
-          audioRef.current.currentTime = targetTime
-          setCurrentTime(targetTime)
         }
       }
     }
@@ -247,6 +254,8 @@ export const MusicProvider = ({ children }) => {
   }
 
   const nextTrack = () => {
+    if (!checkCanControlPlayback()) return
+
     const currentQueue = queueRef.current
     if (!currentQueue || currentQueue.length === 0) return
     const currentIdx = currentIndexRef.current
@@ -264,6 +273,8 @@ export const MusicProvider = ({ children }) => {
   }
 
   const prevTrack = () => {
+    if (!checkCanControlPlayback()) return
+
     const currentQueue = queueRef.current
     if (!currentQueue || currentQueue.length === 0) return
 
@@ -290,7 +301,17 @@ export const MusicProvider = ({ children }) => {
     const audio = audioRef.current
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime)
-    const handleLoadedMetadata = () => setDuration(audio.duration)
+    
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration)
+      
+      if (pendingSeekTimeRef.current !== null) {
+        audio.currentTime = pendingSeekTimeRef.current
+        setCurrentTime(pendingSeekTimeRef.current)
+        pendingSeekTimeRef.current = null
+      }
+    }
+
     const handleEnded = () => {
       if (nextTrackRef.current) {
         nextTrackRef.current()
@@ -328,9 +349,14 @@ export const MusicProvider = ({ children }) => {
     }
   }, [isPlaying])
 
-  const togglePlay = () => setIsPlaying(prev => !prev)
+  const togglePlay = () => {
+    if (!checkCanControlPlayback()) return
+    setIsPlaying(prev => !prev)
+  }
 
   const playTrack = (track, customQueue = null) => {
+    if (!checkCanControlPlayback()) return
+
     addToHistory(track)
 
     setQueue(prevQueue => {
@@ -360,6 +386,8 @@ export const MusicProvider = ({ children }) => {
   }
 
   const seekAudio = (time) => {
+    if (!checkCanControlPlayback()) return
+
     audioRef.current.currentTime = time
     setCurrentTime(time)
     broadcastHostState(currentTrack, isPlaying, time) 
